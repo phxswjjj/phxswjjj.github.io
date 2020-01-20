@@ -64,7 +64,8 @@ bot 收到的訊息格式如下：
 
 ### 發送訊息
 指定 chat ID 回覆, 1:1 交談 chat ID=from ID
-```python=import telepot as tel
+```python=
+import telepot as tel
 import time
 from pprint import pprint
 from telepot.loop import MessageLoop
