@@ -41,7 +41,8 @@ print(bot.getMe())
 ![](https://i.imgur.com/9ZfLHNf.png)
 
 ### 接收訊息
-```python=import telepot as tel
+```python=
+import telepot as tel
 import time
 from pprint import pprint
 from telepot.loop import MessageLoop
