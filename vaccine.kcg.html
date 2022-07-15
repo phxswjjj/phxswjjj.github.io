@@ -1,16 +1,34 @@
 <html>
 
-<head></head>
+<head>
+    <style>
+    </style>
+</head>
 
 <body>
     <div id="root">
-        <div id="condition"></div>
+        <div>
+            <a href="https://vaccine.kcg.gov.tw/Reserve" target="_blank">高雄市新冠肺炎疫苗接種預約系統</a>
+        </div>
+        <hr />
+        <div id="condition">
+            <div>
+                <span>名稱(like):</span><input id="txtName" type="text" value="莫德納" />
+            </div>
+            <div>
+                <input id="btnQuery" type="button" onclick="LoadData(this)" value="Query" />
+            </div>
+        </div>
+        <hr />
         <div id="content"></div>
     </div>
     <script>
         const corsUrl = 'https://cors-anywhere.herokuapp.com/';
 
-        function LoadData() {
+        function LoadData(el) {
+            if (!el) el = document.querySelector('#btnQuery');
+            el.disabled = true;
+
             let content = document.querySelector('#content');
             console.dir(content);
             content.innerText = 'loading...';
@@ -26,15 +44,19 @@
                 })
                 .then((list) => {
                     content.innerHTML = '';
-                    
+                    let likeName = txtName.value;
+
                     list.forEach((data) => {
+                        if (likeName && !data.name.includes(likeName)) return;
+
                         let found = data.servicePeriods.find(s => s.isFull);
                         if (!found) return;
                         let place = document.createElement('div');
                         place.innerHTML = `${data.town}-${data.name}`;
                         content.appendChild(place);
                     });
-                    console.log(list);
+
+                    el.disabled = false;
                 })
                 .catch((ex) => {
                     console.log('error', ex.message);
