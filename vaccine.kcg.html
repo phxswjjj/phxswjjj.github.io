@@ -1,0 +1,49 @@
+<html>
+
+<head></head>
+
+<body>
+    <div id="root">
+        <div id="condition"></div>
+        <div id="content"></div>
+    </div>
+    <script>
+        const corsUrl = 'https://cors-anywhere.herokuapp.com/';
+
+        function LoadData() {
+            let content = document.querySelector('#content');
+            console.dir(content);
+            content.innerText = 'loading...';
+
+            let url = 'https://vaccine.kcg.gov.tw/api/Common/HealthCenters?town=';
+            let options = {};
+            fetch(`${corsUrl}${url}`, options)
+                .then((resp) => {
+                    if (!resp.ok)
+                        throw { message: resp.statusText };
+
+                    return resp.json();
+                })
+                .then((list) => {
+                    content.innerHTML = '';
+                    
+                    list.forEach((data) => {
+                        let found = data.servicePeriods.find(s => s.isFull);
+                        if (!found) return;
+                        let place = document.createElement('div');
+                        place.innerHTML = `${data.town}-${data.name}`;
+                        content.appendChild(place);
+                    });
+                    console.log(list);
+                })
+                .catch((ex) => {
+                    console.log('error', ex.message);
+                    content.innerText = ex.message;
+                });
+        }
+
+        LoadData();
+    </script>
+</body>
+
+</html>
