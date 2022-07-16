@@ -2,6 +2,9 @@
 
 <head>
     <style>
+        #req-fail img {
+            border: 2px solid black;
+        }
     </style>
 </head>
 
@@ -22,15 +25,36 @@
         <hr />
         <div id="content"></div>
     </div>
+    <div id="req-fail" style="display: none;">
+        <p>
+            如看到此訊息，請至底下連結執行「Request temporary access to then demo server」暫時啟用跨站請求。
+        </p>
+        <p>
+            <a href="https://cors-anywhere.herokuapp.com/corsdemo"
+                target="_blank">https://cors-anywhere.herokuapp.com/corsdemo</a>
+        </p>
+        <img src="images/cors-anywhere-corsdemo.jpg" />
+    </div>
     <script>
         const corsUrl = 'https://cors-anywhere.herokuapp.com/';
+
+        function ShowCORSError() {
+            let root = document.querySelector('#root');
+            root.style.display = 'none';
+
+            let reqFail = document.querySelector('#req-fail');
+            reqFail.style.display = 'block';
+
+            setTimeout(() => {
+                window.location.reload();
+            }, 5000);
+        }
 
         function LoadData(el) {
             if (!el) el = document.querySelector('#btnQuery');
             el.disabled = true;
 
             let content = document.querySelector('#content');
-            console.dir(content);
             content.innerText = 'loading...';
 
             let url = 'https://vaccine.kcg.gov.tw/api/Common/HealthCenters?town=';
@@ -38,7 +62,10 @@
             fetch(`${corsUrl}${url}`, options)
                 .then((resp) => {
                     if (!resp.ok)
-                        throw { message: resp.statusText };
+                        throw {
+                            message: resp.statusText,
+                            status: resp.status
+                        };
 
                     return resp.json();
                 })
@@ -61,6 +88,10 @@
                 .catch((ex) => {
                     console.log('error', ex.message);
                     content.innerText = ex.message;
+
+                    if (ex.status == 403) {
+                        ShowCORSError();
+                    }
                 });
         }
 
