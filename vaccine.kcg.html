@@ -5,6 +5,10 @@
         #req-fail img {
             border: 2px solid black;
         }
+
+        #txtName {
+            width: 14em;
+        }
     </style>
 </head>
 
@@ -41,6 +45,12 @@
     <script>
         const corsUrl = 'https://cors-anywhere.herokuapp.com/';
 
+        function LoadSetting() {
+            let prevName = localStorage.getItem('query-name');
+            if (prevName)
+                document.querySelector('#txtName').value = prevName;
+        }
+
         function ShowCORSError() {
             let root = document.querySelector('#root');
             root.style.display = 'none';
@@ -61,6 +71,11 @@
         }
 
         function LoadData(el) {
+            if (el) {
+                let queryName = document.querySelector('#txtName').value;
+                if (queryName)
+                    localStorage.setItem('query-name', queryName);
+            }
             if (!el) el = document.querySelector('#btnQuery');
             el.disabled = true;
 
@@ -93,7 +108,7 @@
                     nameOptions.innerHTML = '';
                     names.forEach(name => {
                         let opt = document.createElement('option');
-                        opt.innerText = name;
+                        opt.value = name;
                         nameOptions.appendChild(opt);
                     });
                     return list;
@@ -148,6 +163,7 @@
                 });
         }
 
+        LoadSetting();
         LoadData();
     </script>
 </body>
