@@ -45,6 +45,32 @@
     <script>
         const corsUrl = 'https://cors-anywhere.herokuapp.com/';
 
+        Storage.prototype.getItemExp = function (key) {
+            const item = JSON.parse(this.getItem(key));
+            if (!item.expiry)
+                return item;
+            else {
+                const now = new Date();
+                if (now.getTime() > item.expiry) {
+                    this.removeItem(key);
+                    return null;
+                } else
+                    return item.value;
+            }
+        };
+        Storage.prototype.setItemExp = function (key, value, ttl) {
+            if (!ttl) {
+                this.setItem(key, value);
+                return;
+            }
+            const now = new Date();
+            const item = {
+                value: value,
+                expiry: now.getTime() + ttl
+            }
+            this.setItem(key, JSON.stringify(item));
+        };
+
         function LoadSetting() {
             let prevName = localStorage.getItem('query-name');
             if (prevName)
@@ -70,20 +96,62 @@
             return t;
         }
 
+        function ShowDataByFilter(list) {
+            // 篩選
+            const content = document.querySelector('#content');
+            content.innerHTML = '';
+            const txtName = document.querySelector('#txtName');
+            const likeName = txtName.value;
+
+            list.forEach((data) => {
+                if (likeName && !data.name.includes(likeName)) return;
+
+                const found = data.servicePeriods.find(s => !s.isFull);
+                if (!found) return;
+
+                const totalNum = data.servicePeriods
+                    .map(x => x.maximum)
+                    .reduce((x, y) => {
+                        if (!x) return y;
+                        if (!y) return x;
+                        return x + y;
+                    });
+                const curNum = data.servicePeriods
+                    .map(x => x.current)
+                    .reduce((x, y) => {
+                        if (!x) return y;
+                        if (!y) return x;
+                        return x + y;
+                    });
+
+                const remaining = totalNum - curNum;
+
+                const place = document.createElement('div');
+                place.innerHTML = `${data.town}-${data.name}, 剩餘名額：${remaining}`;
+                content.appendChild(place);
+            });
+        }
+
         function LoadData(el) {
             if (el) {
-                let queryName = document.querySelector('#txtName').value;
+                const queryName = document.querySelector('#txtName').value;
                 if (queryName)
                     localStorage.setItem('query-name', queryName);
+
+                const prevSource = localStorage.getItemExp('req-source');
+                if (prevSource) {
+                    ShowDataByFilter(prevSource);
+                    return;
+                }
             }
             if (!el) el = document.querySelector('#btnQuery');
             el.disabled = true;
 
-            let content = document.querySelector('#content');
+            const content = document.querySelector('#content');
             content.innerText = 'loading...';
 
-            let url = 'https://vaccine.kcg.gov.tw/api/Common/HealthCenters?town=';
-            let options = {};
+            const url = 'https://vaccine.kcg.gov.tw/api/Common/HealthCenters?town=';
+            const options = {};
             fetch(`${corsUrl}${url}`, options)
                 .then(resp => {
                     if (!resp.ok)
@@ -116,41 +184,14 @@
                 .then(list => {
                     // 排序
                     list.sort(DataComparer);
+
+                    //10 mins
+                    const ttl = 10 * 60 * 1000;
+                    localStorage.setItemExp('req-source', list, ttl);
                     return list;
                 })
-                .then(list => {
-                    // 篩選
-                    content.innerHTML = '';
-                    let likeName = txtName.value;
-
-                    list.forEach((data) => {
-                        if (likeName && !data.name.includes(likeName)) return;
-
-                        let found = data.servicePeriods.find(s => !s.isFull);
-                        if (!found) return;
-
-                        let totalNum = data.servicePeriods
-                            .map(x => x.maximum)
-                            .reduce((x, y) => {
-                                if (!x) return y;
-                                if (!y) return x;
-                                return x + y;
-                            });
-                        let curNum = data.servicePeriods
-                            .map(x => x.current)
-                            .reduce((x, y) => {
-                                if (!x) return y;
-                                if (!y) return x;
-                                return x + y;
-                            });
-
-                        let remaining = totalNum - curNum;
-
-                        let place = document.createElement('div');
-                        place.innerHTML = `${data.town}-${data.name}, 剩餘名額：${remaining}`;
-                        content.appendChild(place);
-                    });
-
+                .then(ShowDataByFilter)
+                .then(() => {
                     el.disabled = false;
                 })
                 .catch(ex => {
