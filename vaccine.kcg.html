@@ -91,10 +91,30 @@
                     list.forEach((data) => {
                         if (likeName && !data.name.includes(likeName)) return;
 
-                        let found = data.servicePeriods.find(s => s.isFull);
+                        let found = data.servicePeriods.find(s => !s.isFull);
                         if (!found) return;
+
+                        let totalNum = data.servicePeriods
+                            .map(x => x.maximum)
+                            .reduce((x, y) => {
+                                if (!x) return y;
+                                if (!y) return x;
+                                return x + y;
+                            });
+                        let curNum = data.servicePeriods
+                            .map(x => x.current)
+                            .reduce((x, y) => {
+                                if (!x) return y;
+                                if (!y) return x;
+                                return x + y;
+                            });
+
+                        let remaining = totalNum - curNum;
+                        if(remaining < 0)
+                            console.log(data);
+
                         let place = document.createElement('div');
-                        place.innerHTML = `${data.town}-${data.name}`;
+                        place.innerHTML = `${data.town}-${data.name}, 剩餘名額：${remaining}`;
                         content.appendChild(place);
                     });
 
