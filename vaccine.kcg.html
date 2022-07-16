@@ -18,7 +18,7 @@
             <div>
                 <span>名稱(like):</span><input id="txtName" type="text" value="莫德納" />
             </div>
-            <div>
+            <div style="margin-top: .5em;">
                 <input id="btnQuery" type="button" onclick="LoadData(this)" value="Query" />
             </div>
         </div>
@@ -33,7 +33,8 @@
             <a href="https://cors-anywhere.herokuapp.com/corsdemo"
                 target="_blank">https://cors-anywhere.herokuapp.com/corsdemo</a>
         </p>
-        <img src="images/cors-anywhere-corsdemo.jpg" />
+        <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank"><img
+                src="images/cors-anywhere-corsdemo.jpg" /></a>
     </div>
     <script>
         const corsUrl = 'https://cors-anywhere.herokuapp.com/';
@@ -50,6 +51,13 @@
             }, 5000);
         }
 
+        function DataComparer(x, y) {
+            let t = x.town.localeCompare(y.town);
+            if (t == 0)
+                t = x.name.localeCompare(y.name);
+            return t;
+        }
+
         function LoadData(el) {
             if (!el) el = document.querySelector('#btnQuery');
             el.disabled = true;
@@ -60,16 +68,23 @@
             let url = 'https://vaccine.kcg.gov.tw/api/Common/HealthCenters?town=';
             let options = {};
             fetch(`${corsUrl}${url}`, options)
-                .then((resp) => {
+                .then(resp => {
                     if (!resp.ok)
                         throw {
                             message: resp.statusText,
                             status: resp.status
                         };
 
+                    // 轉 json
                     return resp.json();
                 })
-                .then((list) => {
+                .then(list => {
+                    // 排序
+                    list.sort(DataComparer);
+                    return list;
+                })
+                .then(list => {
+                    // 篩選
                     content.innerHTML = '';
                     let likeName = txtName.value;
 
@@ -85,7 +100,7 @@
 
                     el.disabled = false;
                 })
-                .catch((ex) => {
+                .catch(ex => {
                     console.log('error', ex.message);
                     content.innerText = ex.message;
 
