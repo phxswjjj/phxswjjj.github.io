@@ -16,7 +16,9 @@
         <hr />
         <div id="condition">
             <div>
-                <span>名稱(like):</span><input id="txtName" type="text" value="莫德納" />
+                <span>名稱(like):</span><input id="txtName" type="text" list="nameOptions" value="莫德納" />
+                <datalist id="nameOptions">
+                </datalist>
             </div>
             <div style="margin-top: .5em;">
                 <input id="btnQuery" type="button" onclick="LoadData(this)" value="Query" />
@@ -79,6 +81,24 @@
                     return resp.json();
                 })
                 .then(list => {
+                    //處理 name list
+                    let names = list
+                        .map(d => d.name.split('，')[1])
+                        .filter((item, index, self) => {
+                            return self.indexOf(item) === index;
+                        })
+                        .sort((x, y) => x.localeCompare(y));
+
+                    let nameOptions = document.querySelector('#nameOptions');
+                    nameOptions.innerHTML = '';
+                    names.forEach(name => {
+                        let opt = document.createElement('option');
+                        opt.innerText = name;
+                        nameOptions.appendChild(opt);
+                    });
+                    return list;
+                })
+                .then(list => {
                     // 排序
                     list.sort(DataComparer);
                     return list;
@@ -110,8 +130,6 @@
                             });
 
                         let remaining = totalNum - curNum;
-                        if(remaining < 0)
-                            console.log(data);
 
                         let place = document.createElement('div');
                         place.innerHTML = `${data.town}-${data.name}, 剩餘名額：${remaining}`;
