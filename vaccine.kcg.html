@@ -10,6 +10,33 @@
         #txtName {
             width: 14em;
         }
+
+        ul {
+            list-style-type: none;
+        }
+
+        .caret {
+            cursor: pointer;
+        }
+
+        .caret::before {
+            content: "\25B6";
+            color: black;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        .caret-down::before {
+            transform: rotate(90deg);
+        }
+
+        .nested {
+            display: none;
+        }
+
+        .unnested {
+            display: block;
+        }
     </style>
 </head>
 
@@ -81,9 +108,11 @@
 
             towns.forEach(town => {
                 const liTown = document.createElement('li');
-                liTown.innerHTML = `<span>${town}</span>`;
+                const townItemCnt = gpList[town].length;
+                liTown.innerHTML = `<span class="caret">${town}(${townItemCnt})</span>`;
 
                 const ulTown = document.createElement('ul');
+                ulTown.classList.add('nested');
                 gpList[town].forEach(item => {
                     const { name, remaining } = item;
                     const liName = document.createElement('li');
@@ -214,6 +243,16 @@
 
         LoadSetting();
         LoadData();
+
+        ((content) => {
+            content.addEventListener('click', (event) => {
+                const target = event.target;
+                if (target.classList.contains('caret')) {
+                    target.classList.toggle('caret-down');
+                    target.nextElementSibling.classList.toggle('unnested');
+                }
+            }, true);
+        })(document.querySelector('#content'));
     </script>
 </body>
 
