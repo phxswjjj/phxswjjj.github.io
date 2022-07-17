@@ -47,16 +47,16 @@
         const corsUrl = 'https://cors-anywhere.herokuapp.com/';
 
         function LoadSetting() {
-            let prevName = localStorage.getItem('query-name');
+            const prevName = localStorage.getItem('query-name');
             if (prevName)
                 document.querySelector('#txtName').value = prevName;
         }
 
         function ShowCORSError() {
-            let root = document.querySelector('#root');
+            const root = document.querySelector('#root');
             root.style.display = 'none';
 
-            let reqFail = document.querySelector('#req-fail');
+            const reqFail = document.querySelector('#req-fail');
             reqFail.style.display = 'block';
 
             setTimeout(() => {
@@ -64,20 +64,52 @@
             }, 5000);
         }
 
-        function DataComparer(x, y) {
-            let t = x.town.localeCompare(y.town);
-            if (t == 0)
-                t = x.name.localeCompare(y.name);
-            return t;
-        }
+        function ShowDataByTreeView(list) {
+            const gpList = list.reduce((groups, item) => {
+                const cate = item.town;
+                groups[cate] = groups[cate] ?? [];
+                groups[cate].push(item);
+                return groups;
+            }, {});
 
-        function ShowDataByFilter(list) {
-            // 篩選
+            const towns = Object.keys(gpList);
+            towns.sort((x, y) => x.localeCompare(y));
+
             const content = document.querySelector('#content');
             content.innerHTML = '';
+            const ulRoot = document.createElement('ul');
+
+            towns.forEach(town => {
+                const liTown = document.createElement('li');
+                liTown.innerHTML = `<span>${town}</span>`;
+
+                const ulTown = document.createElement('ul');
+                gpList[town].forEach(item => {
+                    const { name, remaining } = item;
+                    const liName = document.createElement('li');
+                    const spName = document.createElement('span');
+                    const spRemaining = document.createElement('span');
+
+                    spName.innerText = name;
+                    spRemaining.innerText = `, 剩餘名額: ${remaining}`;
+
+                    liName.appendChild(spName);
+                    liName.appendChild(spRemaining);
+                    ulTown.appendChild(liName);
+                });
+                liTown.appendChild(ulTown);
+
+                ulRoot.appendChild(liTown);
+            });
+
+            content.appendChild(ulRoot);
+        }
+        function ShowDataByFilter(list) {
+            // 篩選
             const txtName = document.querySelector('#txtName');
             const likeName = txtName.value;
 
+            const filteredList = [];
             list.forEach((data) => {
                 if (likeName && !data.name.includes(likeName)) return;
 
@@ -101,10 +133,13 @@
 
                 const remaining = totalNum - curNum;
 
-                const place = document.createElement('div');
-                place.innerHTML = `${data.town}-${data.name}, 剩餘名額：${remaining}`;
-                content.appendChild(place);
+                data.remaining = remaining;
+                filteredList.push(data);
+                // const place = document.createElement('div');
+                // place.innerHTML = `${data.town}-${data.name}, 剩餘名額：${remaining}`;
+                // content.appendChild(place);
             });
+            ShowDataByTreeView(filteredList);
         }
 
         function LoadData(el) {
@@ -140,26 +175,24 @@
                 })
                 .then(list => {
                     //處理 name list
-                    let names = list
+                    const names = list
                         .map(d => d.name.split('，')[1])
                         .filter((item, index, self) => {
                             return self.indexOf(item) === index;
                         })
                         .sort((x, y) => x.localeCompare(y));
 
-                    let nameOptions = document.querySelector('#nameOptions');
+                    const nameOptions = document.querySelector('#nameOptions');
                     nameOptions.innerHTML = '';
                     names.forEach(name => {
-                        let opt = document.createElement('option');
+                        const opt = document.createElement('option');
                         opt.value = name;
                         nameOptions.appendChild(opt);
                     });
                     return list;
                 })
                 .then(list => {
-                    // 排序
-                    list.sort(DataComparer);
-
+                    //cache
                     //10 mins
                     const ttl = 10 * 60 * 1000;
                     localStorage.setItemExp('req-source', list, ttl);
