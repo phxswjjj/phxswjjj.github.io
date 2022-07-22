@@ -48,9 +48,10 @@
         <hr />
         <div id="condition">
             <div>
-                <span>名稱(like):</span><input id="txtName" type="text" list="nameOptions" value="莫德納" />
+                <span>分類：</span><input id="txtName" type="text" list="nameOptions" value="莫德納" />
                 <datalist id="nameOptions">
                 </datalist>
+                <input id="btnClearName" type="button" onclick="ClearFilter(this)" value="Clear" />
             </div>
             <div style="margin-top: .5em;">
                 <input id="btnQuery" type="button" onclick="LoadData(this)" value="Query" />
@@ -136,11 +137,11 @@
         function ShowDataByFilter(list) {
             // 篩選
             const txtName = document.querySelector('#txtName');
-            const likeName = txtName.value;
+            const filterVaccineName = txtName.value;
 
             const filteredList = [];
             list.forEach((data) => {
-                if (likeName && !data.name.includes(likeName)) return;
+                if (filterVaccineName && data.vaccine != filterVaccineName) return;
 
                 const found = data.servicePeriods.find(s => !s.isFull);
                 if (!found) return;
@@ -171,6 +172,12 @@
             ShowDataByTreeView(filteredList);
         }
 
+        function ClearFilter(el) {
+            const txtName = el.parentElement.querySelector('#txtName');
+            txtName.value = '';
+            txtName.focus();
+            // TODO: show datalist
+        }
         function LoadData(el) {
             if (el) {
                 const queryName = document.querySelector('#txtName').value;
@@ -203,9 +210,18 @@
                     return resp.json();
                 })
                 .then(list => {
+                    // split name by place & vaccine type
+                    list.forEach(item => {
+                        const splited = item.name.split('，');
+                        item.place = splited[0];
+                        item.vaccine = splited[1];
+                    });
+                    return list;
+                })
+                .then(list => {
                     //處理 name list
-                    const names = list
-                        .map(d => d.name.split('，')[1])
+                    const vaccineNames = list
+                        .map(d => d.vaccine)
                         .filter((item, index, self) => {
                             return self.indexOf(item) === index;
                         })
@@ -213,9 +229,9 @@
 
                     const nameOptions = document.querySelector('#nameOptions');
                     nameOptions.innerHTML = '';
-                    names.forEach(name => {
+                    vaccineNames.forEach(vaccineName => {
                         const opt = document.createElement('option');
-                        opt.value = name;
+                        opt.value = vaccineName;
                         nameOptions.appendChild(opt);
                     });
                     return list;
@@ -228,9 +244,6 @@
                     return list;
                 })
                 .then(ShowDataByFilter)
-                .then(() => {
-                    el.disabled = false;
-                })
                 .catch(ex => {
                     console.log('error', ex.message);
                     content.innerText = ex.message;
@@ -238,6 +251,9 @@
                     if (ex.status == 403) {
                         ShowCORSError();
                     }
+                })
+                .finally(() => {
+                    el.disabled = false;
                 });
         }
 
