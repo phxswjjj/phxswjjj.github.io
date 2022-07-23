@@ -58,6 +58,10 @@
             </div>
         </div>
         <hr />
+        <div id="content-opr">
+            <input id="btnExtand" type="button" value="Extand All" onclick="ExtandTreeView(this);" />
+            <input id="btnCollapse" type="button" value="Collapse All" onclick="CollapseTreeView(this);" />
+        </div>
         <div id="content"></div>
     </div>
     <div id="req-fail" style="display: none;">
@@ -92,6 +96,19 @@
             }, 5000);
         }
 
+        function ExtandTreeView(el) {
+            const allCarets = document.querySelectorAll('.caret:not(.caret-down)');
+            allCarets.forEach(elCaret => {
+                elCaret.click();
+            });
+        }
+        function CollapseTreeView(el) {
+            const allCarets = document.querySelectorAll('.caret-down');
+            allCarets.forEach(elCaret => {
+                elCaret.click();
+            });
+        }
+
         function ShowDataByTreeView(list) {
             const gpList = list.reduce((groups, item) => {
                 const cate = item.town;
@@ -119,6 +136,7 @@
                     const liName = document.createElement('li');
                     const spName = document.createElement('span');
                     const spRemaining = document.createElement('span');
+                    // TODO: 剩餘名額負數問題
 
                     spName.innerText = name;
                     spRemaining.innerText = `, 剩餘名額: ${remaining}`;
@@ -165,9 +183,6 @@
 
                 data.remaining = remaining;
                 filteredList.push(data);
-                // const place = document.createElement('div');
-                // place.innerHTML = `${data.town}-${data.name}, 剩餘名額：${remaining}`;
-                // content.appendChild(place);
             });
             ShowDataByTreeView(filteredList);
         }
