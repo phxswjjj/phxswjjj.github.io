@@ -136,7 +136,6 @@
                     const liName = document.createElement('li');
                     const spName = document.createElement('span');
                     const spRemaining = document.createElement('span');
-                    // TODO: 剩餘名額負數問題
 
                     spName.innerText = name;
                     spRemaining.innerText = `, 剩餘名額: ${remaining}`;
@@ -161,17 +160,17 @@
             list.forEach((data) => {
                 if (filterVaccineName && data.vaccine != filterVaccineName) return;
 
-                const found = data.servicePeriods.find(s => !s.isFull);
-                if (!found) return;
+                const filteredServicePeriods = data.servicePeriods.filter(s => !s.isFull);
+                if (filteredServicePeriods.length == 0) return;
 
-                const totalNum = data.servicePeriods
+                const totalNum = filteredServicePeriods
                     .map(x => x.maximum)
                     .reduce((x, y) => {
                         if (!x) return y;
                         if (!y) return x;
                         return x + y;
                     });
-                const curNum = data.servicePeriods
+                const curNum = filteredServicePeriods
                     .map(x => x.current)
                     .reduce((x, y) => {
                         if (!x) return y;
